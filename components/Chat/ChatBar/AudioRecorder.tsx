@@ -39,19 +39,14 @@ export default function AudioRecorder({ recording, setRecording, disabled }) {
       reader.onloadend = () => {
         const audioDataArray = new Uint8Array(reader.result as ArrayBufferLike);
         const base64Audio = btoa(String.fromCharCode.apply(null, audioDataArray)); // Convert to base64
-        const response = state.sdk
-          .executeCommand(
-            state.chatSettings.selectedAgent,
-            'Prompt with Voice',
-            {
-              base64_audio: base64Audio,
-              conversation_results: state.chatSettings.conversationResults,
-              context_results: state.chatSettings.contextResults,
-            },
-            state.chatSettings.conversationName,
-          )
+        state.sdk
+          .promptAgentWithVoice(state.chatSettings.selectedAgent, base64Audio, audioData.type.split(';')[0])
           .then(() => {
             mutate('/conversation/' + state.chatSettings.conversationName);
+            return true; // Linting error: requires a return value
+          })
+          .catch((error) => {
+            console.log('error sending audio', error);
           });
         setAudioData(null);
       };
